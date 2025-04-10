@@ -1,0 +1,6 @@
+*.out
+*.fst
+
+.settings/
+.project
+.library_mapping.xml
