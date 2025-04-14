@@ -5,11 +5,11 @@ import instruction_utils::*;
 module core_top(
     input wire clk,
     input wire reset
-    );
-    
+);
+
     wire [31:0] pc;
     wire [31:0] branch_target;
-    
+
     wire take_branch;
     wire stall = 0;
 
@@ -48,8 +48,8 @@ module core_top(
         .rd_write_en(rd_write_en),
         .instr_type(decoded_instr)
     );
-    
-    
+
+
     wire [31:0] rs1_data;
     wire [31:0] rs2_data;
     wire [31:0] result;
@@ -67,21 +67,13 @@ module core_top(
     );
 
     alu alu_instance (
-        .operand1(rs1_data),
-        .operand2(rs2_data),
+        .rs1(rs1_data),
+        .rs2(rs2_data),
         .imm(imm),
         .pc(pc),
         .instr(decoded_instr),
+        .take_branch(take_branch),
+        .branch_target(branch_target),
         .result(result)
     );
-
-    comperator comperator_instance (
-        .rs1(rs1_data),
-        .rs2(rs2_data),
-        .instr(decoded_instr),
-        .take_branch(take_branch)
-    );
-    
-    assign branch_target = pc + imm;
-
 endmodule
