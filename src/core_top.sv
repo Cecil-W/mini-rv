@@ -1,11 +1,6 @@
 `timescale 1ns / 1ps
-`include "program_counter.sv"
-`include "instruction_memory.sv"
-`include "decode.sv"
-`include "register_file.sv"
-`include "comperator.sv"
-`include "alu.sv"
 
+import instruction_utils::*;
 
 module core_top(
     input wire clk,
@@ -14,7 +9,7 @@ module core_top(
     
     wire [31:0] pc;
     wire [31:0] branch_target;
-
+    
     wire take_branch;
     wire stall = 0;
 
@@ -40,16 +35,9 @@ module core_top(
     wire [4:0] rd;
     wire [31:0] imm;
 
-    wire is_addi;
-    wire is_add;
-    wire write_en;
+    wire rd_write_en;
 
-    wire is_beq;
-    wire is_bne;
-    wire is_blt;
-    wire is_bge;
-    wire is_bltu;
-    wire is_bgeu;
+    rv32i_instr_e decoded_instr;
 
     decode decoder (
         .instr(instr),
@@ -57,16 +45,8 @@ module core_top(
         .rs2(rs2),
         .rd(rd),
         .imm(imm),
-        .is_addi(is_addi),
-        .is_add(is_add),
-        .is_beq(is_beq),
-        .is_bne(is_bne),
-        .is_blt(is_blt),
-        .is_bge(is_bge),
-        .is_bltu(is_bltu),
-        .is_bgeu(is_bgeu),
-
-        .rd_valid(write_en)
+        .rd_write_en(rd_write_en),
+        .instr_type(decoded_instr)
     );
     
     
@@ -77,7 +57,7 @@ module core_top(
     register_file reg_file (
         .clk(clk),
         .reset(reset),
-        .write_en(write_en),
+        .write_en(rd_write_en),
         .rs1_addr(rs1),
         .rs2_addr(rs2),
         .rd_addr(rd),
@@ -90,20 +70,15 @@ module core_top(
         .operand1(rs1_data),
         .operand2(rs2_data),
         .imm(imm),
-        .is_addi(is_addi),
-        .is_add(is_add),
+        .pc(pc),
+        .instr(decoded_instr),
         .result(result)
     );
 
     comperator comperator_instance (
         .rs1(rs1_data),
         .rs2(rs2_data),
-        .is_beq(is_beq),
-        .is_bne(is_bne),
-        .is_blt(is_blt),
-        .is_bge(is_bge),
-        .is_bltu(is_bltu),
-        .is_bgeu(is_bgeu),
+        .instr(decoded_instr),
         .take_branch(take_branch)
     );
     

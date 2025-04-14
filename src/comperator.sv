@@ -1,26 +1,28 @@
 `timescale 1ns / 1ps
 
-module comperator(
-    input  wire [31:0] rs1,
-    input  wire [31:0] rs2,
-    input  wire is_beq,
-    input  wire is_bne,
-    input  wire is_blt,
-    input  wire is_bge,
-    input  wire is_bltu,
-    input  wire is_bgeu,
+import instruction_utils::*;
 
-    output wire take_branch
+
+// I could integrate this into the ALU
+module comperator(
+    input wire [31:0] rs1,
+    input wire [31:0] rs2,
+    input rv32i_instr_e instr,
+
+    output logic take_branch
     );
 
-    assign take_branch = is_beq ? rs1 == rs2 :
-                         is_bne ? rs1 != rs2 :
-                         is_blt ? (rs1 < rs2) ^ (rs1[31] != rs2[31]) :
-                         is_bge ? (rs1 >= rs2) ^ (rs1[31] != rs2[31]) :
-                         is_bltu ? rs1 < rs2 :
-                         is_bgeu ? rs1 >= rs2 :
-                         'b0;
-        
+    always_comb begin
+        case (instr)
+            INSTR_BEQ  : take_branch = rs1 == rs2;
+            INSTR_BNE  : take_branch = rs1 != rs2;
+            INSTR_BLT  : take_branch = (rs1 < rs2) ^ (rs1[31] != rs2[31]);
+            INSTR_BGE  : take_branch = (rs1 >= rs2) ^ (rs1[31] != rs2[31]);
+            INSTR_BLTU : take_branch = rs1 < rs2;
+            INSTR_BGEU : take_branch = rs1 >= rs2;
+            default    : take_branch = 1'b0;
+        endcase
+    end
 endmodule
 
 

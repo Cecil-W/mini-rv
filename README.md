@@ -1,4 +1,4 @@
-# micro-rv
+# mini-rv
 
 A simple RV32I core, that is currently not pipelined and as a start only supports add(i) and some branch instructions to test early
 
