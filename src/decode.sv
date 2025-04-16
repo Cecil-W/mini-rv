@@ -113,8 +113,9 @@ module decode(
                     {FUNCT7_SLTU, FUNCT3_SLTU}   : instr_type = INSTR_SLTU;
                     {FUNCT7_XOR, FUNCT3_XOR}     : instr_type = INSTR_XOR;
                     {FUNCT7_SRL, FUNCT3_SRL_SRA} : instr_type = INSTR_SRL;
+                    {FUNCT7_SRA, FUNCT3_SRL_SRA} : instr_type = INSTR_SRA;
                     {FUNCT7_OR, FUNCT3_OR}       : instr_type = INSTR_OR;
-                    {FUNCT7_AND, FUNCT3_AND}     : instr_type = INSTR_OR;
+                    {FUNCT7_AND, FUNCT3_AND}     : instr_type = INSTR_AND;
                     default : instr_type = INSTR_ILLEGAL;
                 endcase
             end

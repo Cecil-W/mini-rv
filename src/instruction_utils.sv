@@ -2,7 +2,7 @@
 
 package instruction_utils;
     // RV32I instructions
-    typedef enum {
+    typedef enum logic [5:0]{
         // --- Instruction Types ---
         INSTR_ILLEGAL,
         // INSTR_NOP,
@@ -125,14 +125,13 @@ package instruction_utils;
     localparam logic [6:0] FUNCT7_XOR  = 7'b0000_000;
     // funct3 101
     localparam logic [6:0] FUNCT7_SRL  = 7'b0000_000;
-    localparam logic [6:0] FUNCT7_SRA  = 7'b0000_000;
+    localparam logic [6:0] FUNCT7_SRA  = 7'b0100_000;
     // funct3 110
     localparam logic [6:0] FUNCT7_OR   = 7'b0000_000;
     // funct3 111
     localparam logic [6:0] FUNCT7_AND  = 7'b0000_000;
     
 
-    // Instruction disassembler TODO Not up to date
     function automatic string disassemble(input logic [31:0] instr);
         logic [6:0] opcode = instr[6:0];
         logic [4:0] rd = instr[11:7];
@@ -140,8 +139,11 @@ package instruction_utils;
         logic [4:0] rs1 = instr[19:15];
         logic [4:0] rs2 = instr[24:20];
         logic [6:0] funct7 = instr[31:25];
-        integer imm_i = $signed({{21{instr[31]}}, instr[30:20]});
-        integer imm_b = $signed({{20{instr[31]}}, instr[7], instr[30:25], instr[11:8], 1'b0});
+        integer signed imm_i = {{21{instr[31]}}, instr[30:20]};
+        integer signed imm_s = {{21{instr[31]}}, instr[30:25], instr[11:7]};
+        integer signed imm_b = {{20{instr[31]}}, instr[7], instr[30:25], instr[11:8], 1'b0};
+        integer signed imm_u = {instr[31:12], 12'b0};
+        integer signed imm_j = {{12{instr[31]}}, instr[19:12], instr[20], instr[30:21], 1'b0};
 
         string result_str;
 
@@ -176,6 +178,7 @@ package instruction_utils;
                     {FUNCT7_SLTU, FUNCT3_SLTU}   : result_str = $sformatf("sltu x%0d, x%0d, x%0d", rd, rs1, rs2);
                     {FUNCT7_XOR, FUNCT3_XOR}     : result_str = $sformatf("xor x%0d, x%0d, x%0d", rd, rs1, rs2);
                     {FUNCT7_SRL, FUNCT3_SRL_SRA} : result_str = $sformatf("srl x%0d, x%0d, x%0d", rd, rs1, rs2);
+                    {FUNCT7_SRA, FUNCT3_SRL_SRA} : result_str = $sformatf("sra x%0d, x%0d, x%0d", rd, rs1, rs2);
                     {FUNCT7_OR, FUNCT3_OR}       : result_str = $sformatf("or x%0d, x%0d, x%0d", rd, rs1, rs2);
                     {FUNCT7_AND, FUNCT3_AND}     : result_str = $sformatf("and x%0d, x%0d, x%0d", rd, rs1, rs2);
                     default : result_str = "unknown R-type";
@@ -193,15 +196,27 @@ package instruction_utils;
                 endcase
             end
             OPCODE_LOAD : begin 
-                case (funct3) // TODO fix imm
-                    FUNCT3_LB  : result_str = $sformatf("lb x%0d, %d(x%0d)", rd, $signed({imm_b, 1'b0}), rd);
-                    FUNCT3_LH  : result_str = $sformatf("lh x%0d, %d(x%0d)", rd, $signed({imm_b, 1'b0}), rd);
-                    FUNCT3_LW  : result_str = $sformatf("lw x%0d, %d(x%0d)", rd, $signed({imm_b, 1'b0}), rd);
-                    FUNCT3_LBU : result_str = $sformatf("lbu x%0d, %d(x%0d)", rd, $signed({imm_b, 1'b0}), rd);
-                    FUNCT3_LHU : result_str = $sformatf("lhu x%0d, %d(x%0d)", rd, $signed({imm_b, 1'b0}), rd);
-                    default: result_str = "Ill-formed Load Instruction";
+                case (funct3)
+                    FUNCT3_LB  : result_str = $sformatf("lb x%0d, %d(x%0d)", rd, imm_b, rd);
+                    FUNCT3_LH  : result_str = $sformatf("lh x%0d, %d(x%0d)", rd, imm_b, rd);
+                    FUNCT3_LW  : result_str = $sformatf("lw x%0d, %d(x%0d)", rd, imm_b, rd);
+                    FUNCT3_LBU : result_str = $sformatf("lbu x%0d, %d(x%0d)", rd, imm_b, rd);
+                    FUNCT3_LHU : result_str = $sformatf("lhu x%0d, %d(x%0d)", rd, imm_b, rd);
+                    default: result_str = "Ill-formed Load Instruction!";
                 endcase
             end
+            OPCODE_STORE : begin
+                case (funct3)
+                    FUNCT3_SB : result_str = $sformatf("sb x%0d, %d(x%0d)", rs2, imm_s, rs1);
+                    FUNCT3_SH : result_str = $sformatf("sh x%0d, %d(x%0d)", rs2, imm_s, rs1);
+                    FUNCT3_SW : result_str = $sformatf("sw x%0d, %d(x%0d)", rs2, imm_s, rs1);
+                    default   : result_str = "Ill-formed Store Instruction!";
+                endcase
+            end
+            OPCODE_LUI   : result_str = $sformatf("lui x%0d, %0d", rd, imm_u);
+            OPCODE_AUIPC : result_str = $sformatf("auipc x%0d, %0d", rd, imm_u[31:12]);
+            OPCODE_JAL   : result_str = $sformatf("jal x%0d, %0d", rd, imm_j);
+            OPCODE_JALR  : result_str = $sformatf("jalr x%0d, %0d(x%0d)", rd, imm_i, rs1);
             default: result_str = "unknown instruction";
         endcase
         return result_str;

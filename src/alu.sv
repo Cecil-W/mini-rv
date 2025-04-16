@@ -3,16 +3,25 @@
 import instruction_utils::*;
 
 module alu(
-    input logic [31:0] rs1,
-    input logic [31:0] rs2,
-    input logic [31:0] imm,
-    input logic [31:0] pc,
+    input wire [31:0] rs1,
+    input wire [31:0] rs2,
+    input wire [31:0] imm,
+    input wire [31:0] pc,
     input rv32i_instr_e instr,
 
     output logic take_branch,
     output logic [31:0] branch_target,
     output logic [31:0] result
 );
+
+    // iverilog error: sorry: constant selects in always_* processes are not currently supported (all bits will be included).
+    // wires for the constant selects
+    wire [4:0] shift_imm = imm[4:0]; // on rv64 shift by 6 bits, but on rv32 the shift is only 5 bits
+    wire rs1_msb = rs1[31];
+    wire rs2_msb = rs2[31];
+    wire imm_msb = imm[31];
+    wire [4:0] shift_rs2 = rs2[4:0]; // on rv64 shift by rs2[5:0]
+    wire [63:0] sext_rs1_64 = {{32{rs1[31]}}, rs1};
 
     always_comb begin
         // defaults
@@ -29,7 +38,7 @@ module alu(
             INSTR_JALR : begin
                 result = pc + 4;
                 take_branch = 1;
-                branch_target = (rs1 + imm) & !32'b1;
+                branch_target = (rs1 + imm) & {{31{1'b1}}, 1'b0};
             end
             // U-Type
             INSTR_AUIPC : result = pc + imm;
@@ -37,8 +46,8 @@ module alu(
             // B-Type
             INSTR_BEQ  : take_branch = rs1 == rs2;
             INSTR_BNE  : take_branch = rs1 != rs2;
-            INSTR_BLT  : take_branch = (rs1 < rs2) ^ (rs1[31] != rs2[31]);
-            INSTR_BGE  : take_branch = (rs1 >= rs2) ^ (rs1[31] != rs2[31]);
+            INSTR_BLT  : take_branch = (rs1 < rs2) ^ (rs1_msb != rs2_msb);
+            INSTR_BGE  : take_branch = (rs1 >= rs2) ^ (rs1_msb != rs2_msb);
             INSTR_BLTU : take_branch = rs1 < rs2;
             INSTR_BGEU : take_branch = rs1 >= rs2;
             // I-Type (ALU Immediate)
@@ -48,11 +57,11 @@ module alu(
             INSTR_ANDI  : result = rs1 & imm;
             // This dynamic casting causes a segfault in iverilog
             // INSTR_SLTI  : result = ($signed'(operand1) < $signed'(imm)) ? 32'b1 : 32'b0;
-            INSTR_SLTI  : result = ((rs1 < imm) ^ (rs1[31] != imm[31])) ? 32'b1 : 32'b0;
-            INSTR_SLTIU : result = rs1 < imm ? 32'b1 : 32'b0;
-            INSTR_SLLI  : result = rs1 << imm[4:0];
-            INSTR_SRLI  : result = rs1 >> imm[4:0];
-            INSTR_SRAI  : result = rs1 >>> imm[4:0];
+            INSTR_SLTI  : result = ((rs1 < imm) ^ (rs1_msb != imm_msb)) ? 32'b1 : 32'b0;
+            INSTR_SLTIU : result = rs1 < imm ? 32'b1 : 32'b0; // TODO simplify this to {31'b0, rs1 < imm}, only works on unsigned
+            INSTR_SLLI  : result = rs1 << shift_imm;
+            INSTR_SRLI  : result = rs1 >> shift_imm;
+            INSTR_SRAI  : result = sext_rs1_64 >> shift_imm; // can't use >>> as the inputs are not signed
 
             // R-Type (Register-Register ALU)
             INSTR_ADD  : result = rs1 + rs2;
@@ -60,30 +69,14 @@ module alu(
             INSTR_XOR  : result = rs1 ^ rs2;
             INSTR_OR   : result = rs1 | rs2;
             INSTR_AND  : result = rs1 & rs2;
-            INSTR_SLL  : result = rs1 <<  rs2[4:0]; // on rv64 shift by rs2[5:0]
-            INSTR_SRL  : result = rs1 >>  rs2[4:0];
-            INSTR_SRA  : result = rs1 >>> rs2[4:0]; // TODO make sure this produces the correct result
+            INSTR_SLL  : result = rs1 <<  shift_rs2;
+            INSTR_SRL  : result = rs1 >>  shift_rs2;
+            INSTR_SRA  : result = sext_rs1_64 >> shift_rs2;
             // This dynamic casting causes a segfault in iverilog, should probably create an issue
             // INSTR_SLT  : result = ($signed(operand1) < $signed(operand2)) ? 32'b1 : 32'b0;
-            INSTR_SLT  : result = ((rs1 < imm) ^ (rs1[31] != imm[31])) ? 32'b1 : 32'b0;
+            INSTR_SLT  : result = ((rs1 < imm) ^ (rs1_msb != imm_msb)) ? 32'b1 : 32'b0;
             INSTR_SLTU : result = rs1 < rs2 ? 32'b1 : 32'b0;
             default    : result = 32'b0;
         endcase
     end
-
-    /* TODO Instructions that are not yet implemented
-        // I-Type (Load)
-        INSTR_LB,
-        INSTR_LH,
-        INSTR_LW,
-        INSTR_LBU,
-        INSTR_LHU,
-        
-        // S-Type (Store)
-        INSTR_SB,
-        INSTR_SH,
-        INSTR_SW,
-     */
-
-
 endmodule
