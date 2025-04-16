@@ -1,11 +1,12 @@
 # mini-rv
 
-A simple RV32I core, that is currently not pipelined and as a start only supports add(i) and some branch instructions to test early
+A WIP simple RV32I core, that is currently not pipelined and as a start only supports add(i) and some branch instructions to test early
 
 ## Compilation & Simulation
 
 Compilation and Simulation was mainly done with iverilog & vvp.
-All the testbenchens can be found in the sim directory with a `tb_` prefix
+All the testbenchens can be found in the sim directory with a `tb_` prefix.
+The file `core.cf` is a command file for iverilog with the correct compile order to compile the core. To compile a specific testbench just specify `-c core.cf testbench.sv`.
 
 ### Waveform Dump format
 

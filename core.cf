@@ -1,0 +1,7 @@
+src/instruction_utils.sv
+src/program_counter.sv
+src/instruction_memory.sv
+src/decode.sv
+src/register_file.sv
+src/alu.sv
+src/core_top.sv
