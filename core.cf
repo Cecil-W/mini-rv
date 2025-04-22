@@ -4,4 +4,6 @@ src/instruction_memory.sv
 src/decode.sv
 src/register_file.sv
 src/alu.sv
+src/lsu.sv
+src/data_memory.sv
 src/core_top.sv

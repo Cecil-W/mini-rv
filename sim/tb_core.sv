@@ -3,11 +3,11 @@
 import instruction_utils::*;
 
 module tb_core;
-    
+
     // Clock and reset signals
     logic clk = 0;
     logic reset;
-    
+
     // Instantiate the DUT
     core_top dut (
         .clk(clk),
@@ -30,9 +30,9 @@ module tb_core;
             forever @(posedge clk) begin
                 if (!reset) begin
                     $display("PC: 0x%08h | Instr: 0x%08h | %s \t| rs1=%0d | rs2=%0d",
-                            dut.pc, dut.instr, instruction_utils::disassemble(dut.instr), dut.rs1_data, dut.rs2_data);
+                        dut.pc, dut.instr, instruction_utils::disassemble(dut.instr), dut.rs1_data, dut.rs2_data);
                     if (dut.reg_file.write_en && dut.rd != 0) begin
-                        $display("    Register Write: x%0d = %0d", dut.rd, dut.result);
+                        $display("    Register Write: x%0d = %0d", dut.rd, dut.alu_result);
                     end
                 end
             end
@@ -53,14 +53,11 @@ module tb_core;
             //14: addi x0, x0, 0      // loop exit; nop
             //18: beq x0, x0, -4      // infinit loop to not crash the simulation
 
-            // reading the instructions from a file, this behaves differntly in vivado and iverilog
-            // vivado fills the buffer from 0 upwards, and iverilog seems to fill from top to bottom
-            // therefore i can leave the memory oversized in vivado but not for iverilog
             $readmemh("./sim/sum_test.txt", dut.i_mem.mem, 0);
 
             // Wait for completion
             #500;
-            
+
             // Check final register values
             if(dut.reg_file.registers[1] == 0 && dut.reg_file.registers[2] == 15) begin
                 $display("TEST PASSED: x1 = 0, x2 = 15 as expected");
@@ -68,20 +65,20 @@ module tb_core;
                 $display("TEST FAILED: x1 = %0d (expected 0), x2 = %0d (expected 15)", dut.reg_file.registers[1], dut.reg_file.registers[2]);
             end
         end
-        if ($test$plusargs("alu_test")) begin
-            // this program should test every instruction(except for load/store as they are not implemented yet)
+        if ($test$plusargs("instr_test")) begin
+            // this program tests every instruction (except for b and h load/store instructions)
             // each innstruction test should result in a 1 in the respective register (x5-x30)
-            $readmemh("./sim/alu_test.hex", dut.i_mem.mem, 0);
+            $readmemh("./sim/instr_test.hex", dut.i_mem.mem, 0);
             // Wait for completion
             #800;
             for (int i = 5; i < 31; i = i + 1) begin
                 if(dut.reg_file.registers[i] != 1) begin
-                     $display("Register x%0d failed!", i);
+                    $display("Register x%0d failed!", i);
                 end
             end
             $display("TEST DONE");
         end
-            
+
         $finish;
     end
 

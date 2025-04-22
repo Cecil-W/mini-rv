@@ -52,7 +52,12 @@ module core_top(
 
     wire [31:0] rs1_data;
     wire [31:0] rs2_data;
-    wire [31:0] result;
+    wire [31:0] alu_result;
+    wire mem_wb_en;
+    wire [31:0] rd_data;
+    wire [31:0] mem_wb;
+
+    assign rd_data = mem_wb_en ? mem_wb : alu_result;
 
     register_file reg_file (
         .clk(clk),
@@ -61,7 +66,7 @@ module core_top(
         .rs1_addr(rs1),
         .rs2_addr(rs2),
         .rd_addr(rd),
-        .rd_data(result),
+        .rd_data(rd_data),
         .rs1_data(rs1_data),
         .rs2_data(rs2_data)
     );
@@ -74,6 +79,40 @@ module core_top(
         .instr(decoded_instr),
         .take_branch(take_branch),
         .branch_target(branch_target),
-        .result(result)
+        .result(alu_result)
+    );
+
+    // from d mem to lsu
+    wire [31:0] load_data;
+    // from lsu to mem
+    wire [31:0] mem_address;
+    wire write_en;
+    wire [1:0] store_size;
+    wire [31:0] store_data;
+
+    lsu lsu_instance (
+        .rs1(rs1_data),
+        .rs2(rs2_data),
+        .imm(imm),
+        .instr(decoded_instr),
+        .load_data(load_data),
+        .address(mem_address),
+        .mem_wb_en(mem_wb_en),
+        .mem_wb(mem_wb),
+        .write_en(write_en),
+        .store_size(store_size),
+        .store_data(store_data)
+    );
+
+    data_memory #(
+        .MEM_SIZE(64)
+    ) data_memory_instance (
+        .clk(clk),
+        .reset(reset),
+        .write_en(write_en),
+        .addr(mem_address),
+        .store_size(store_size),
+        .store_data(store_data),
+        .load_data(load_data)
     );
 endmodule

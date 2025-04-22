@@ -8,6 +8,7 @@ module register_file(
     input  wire [4:0]  rs2_addr,
     input  wire [4:0]  rd_addr,
     input  wire [31:0] rd_data,
+
     output wire [31:0] rs1_data,
     output wire [31:0] rs2_data
     );

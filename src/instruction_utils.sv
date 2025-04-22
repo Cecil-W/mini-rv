@@ -197,19 +197,19 @@ package instruction_utils;
             end
             OPCODE_LOAD : begin 
                 case (funct3)
-                    FUNCT3_LB  : result_str = $sformatf("lb x%0d, %d(x%0d)", rd, imm_b, rd);
-                    FUNCT3_LH  : result_str = $sformatf("lh x%0d, %d(x%0d)", rd, imm_b, rd);
-                    FUNCT3_LW  : result_str = $sformatf("lw x%0d, %d(x%0d)", rd, imm_b, rd);
-                    FUNCT3_LBU : result_str = $sformatf("lbu x%0d, %d(x%0d)", rd, imm_b, rd);
-                    FUNCT3_LHU : result_str = $sformatf("lhu x%0d, %d(x%0d)", rd, imm_b, rd);
+                    FUNCT3_LB  : result_str = $sformatf("lb x%0d, %0d(x%0d)", rd, imm_i, rs1);
+                    FUNCT3_LH  : result_str = $sformatf("lh x%0d, %0d(x%0d)", rd, imm_i, rs1);
+                    FUNCT3_LW  : result_str = $sformatf("lw x%0d, %0d(x%0d)", rd, imm_i, rs1);
+                    FUNCT3_LBU : result_str = $sformatf("lbu x%0d, %0d(x%0d)", rd, imm_i, rs1);
+                    FUNCT3_LHU : result_str = $sformatf("lhu x%0d, %0d(x%0d)", rd, imm_i, rs1);
                     default: result_str = "Ill-formed Load Instruction!";
                 endcase
             end
             OPCODE_STORE : begin
                 case (funct3)
-                    FUNCT3_SB : result_str = $sformatf("sb x%0d, %d(x%0d)", rs2, imm_s, rs1);
-                    FUNCT3_SH : result_str = $sformatf("sh x%0d, %d(x%0d)", rs2, imm_s, rs1);
-                    FUNCT3_SW : result_str = $sformatf("sw x%0d, %d(x%0d)", rs2, imm_s, rs1);
+                    FUNCT3_SB : result_str = $sformatf("sb x%0d, %0d(x%0d)", rs2, imm_s, rs1);
+                    FUNCT3_SH : result_str = $sformatf("sh x%0d, %0d(x%0d)", rs2, imm_s, rs1);
+                    FUNCT3_SW : result_str = $sformatf("sw x%0d, %0d(x%0d)", rs2, imm_s, rs1);
                     default   : result_str = "Ill-formed Store Instruction!";
                 endcase
             end
