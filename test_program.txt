@@ -1,0 +1,72 @@
+/* simple assembly code for the initial tests, sums up 1 to 5 in x2
+   the loop counter is stored in x1 */
+addi x1, x0, 5
+addi x2, x0, 0
+add x2, x2, x1
+addi x1, x1, -1
+bne x1, x0, -8
+addi x0, x0, 0
+beq x0, x0, -4
+
+/* Program to test every instruction, registers x5-x29 should contain a 1 at the end */
+ADDI x1, x0, 21
+ADDI x2, x0, 7
+ADDI x3, x0, -4
+ANDI x5, x1, 92
+XORI x5, x5, 21
+ORI x6, x1, 92
+XORI x6, x6, 92
+ADDI x7, x1, 7
+XORI x7, x7, 29
+SLLI x8, x1, 6
+XORI x8, x8, 1345
+SRLI x9, x1, 2
+XORI x9, x9, 4
+AND x10, x1, x2
+XORI x10, x10, 4
+OR x11, x1, x2
+XORI x11, x11, 22
+XOR x12, x1, x2
+XORI x12, x12, 19
+ADD x13, x1, x2
+XORI x13, x13, 29
+SUB x14, x1, x2
+XORI x14, x14, 15
+SLL x15, x2, x2
+XORI x15, x15, 897
+SRL x16, x1, x2
+XORI x16, x16, 1
+SLTU x17, x2, x1
+XORI x17, x17, 0
+SLTIU x18, x2, 21
+XORI x18, x18, 0
+LUI x19, 0
+XORI x19, x19, 1
+SRAI x20, x3, 1
+XORI x20, x20, -1
+SLT x21, x3, x1
+XORI x21, x21, 0
+SLTI x22, x3, 1
+XORI x22, x22, 0
+SRA x23, x1, x2
+XORI x23, x23, 1
+AUIPC x4, 4
+SRLI x24, x4, 7
+XORI x24, x24, 128
+JAL x25, 4
+AUIPC x4, 0
+XOR x25, x25, x4
+XORI x25, x25, 1
+JALR x26, x4, 16
+SUB x26, x26, x4
+ADDI x26, x26, -15
+SW x1, 1(x2) /* stores 21 at address 8*/
+LW x27, 1(x2)
+XORI x27, x27, 20
+SH x3, 1(x2) /* stores 1111_1100 at address 8*/
+LBU x28, 1(x2) /* loades 0xFC */
+LH x29, 1(x2) /* loads FFFFFFFC x29 */
+AND x29, x29, x28
+XORI x28, x28, 253
+XORI x29, x29, 253
+JAL x0, 0

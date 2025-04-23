@@ -44,16 +44,7 @@ module tb_core;
         if ($test$plusargs("sum_test")) begin
             // Initialize instruction memory with test program
             // Program calculates sum of numbers from 5 down to 1 (5+4+3+2+1 = 15)
-            // 0: addi x1, x0, 5      // x1 = 5 (counter)
-            // 4: addi x2, x0, 0      // x2 = 0 (sum)
-            // 8: loop:
-            // 8: add x2, x2, x1      // sum += counter
-            // c: addi x1, x1, -1     // counter--
-            //10: bne x1, x0, -8      // loop if counter != 0 (jump to 8)
-            //14: addi x0, x0, 0      // loop exit; nop
-            //18: beq x0, x0, -4      // infinit loop to not crash the simulation
-
-            $readmemh("./sim/sum_test.txt", dut.i_mem.mem, 0);
+            $readmemh("./sim/sum_test.hex", dut.i_mem.mem, 0);
 
             // Wait for completion
             #500;
@@ -67,11 +58,11 @@ module tb_core;
         end
         if ($test$plusargs("instr_test")) begin
             // this program tests every instruction (except for b and h load/store instructions)
-            // each innstruction test should result in a 1 in the respective register (x5-x30)
+            // each innstruction test should result in a 1 in the respective register (x5-x29)
             $readmemh("./sim/instr_test.hex", dut.i_mem.mem, 0);
             // Wait for completion
             #800;
-            for (int i = 5; i < 31; i = i + 1) begin
+            for (int i = 5; i < 30; i = i + 1) begin
                 if(dut.reg_file.registers[i] != 1) begin
                     $display("Register x%0d failed!", i);
                 end
