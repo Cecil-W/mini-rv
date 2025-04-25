@@ -24,9 +24,9 @@ module decode(
     assign rs2 = instr[24:20];
     assign rd = instr[11:7];
 
-    logic [6:0] opcode;
-    logic [2:0] funct3;
-    logic [6:0] funct7;
+    wire [6:0] opcode;
+    wire [2:0] funct3;
+    wire [6:0] funct7;
 
     assign opcode = instr[6:0];
     assign funct3 = instr[14:12];
@@ -34,7 +34,6 @@ module decode(
 
     assign rd_write_en = is_r_type || is_i_type || is_u_type || is_j_type;
 
-    // TODO I think the imm is wrong for the special I type cases, srai etc
     assign imm = is_i_type ? {{21{instr[31]}}, instr[30:20]} :
                  is_s_type ? {{21{instr[31]}}, instr[30:25], instr[11:7]} :
                  is_b_type ? {{20{instr[31]}}, instr[7], instr[30:25], instr[11:8], 1'b0} :
@@ -87,7 +86,13 @@ module decode(
             end
             OPCODE_OP_IMM : begin
                 case (funct3)
-                    FUNCT3_ADDI  : instr_type = INSTR_ADDI;
+                    FUNCT3_ADDI  : begin
+                        if (rs1 == 0 && rd == 0 && imm == 0) begin
+                            instr_type = INSTR_NOP;
+                        end else begin
+                            instr_type = INSTR_ADDI;
+                        end
+                    end
                     FUNCT3_SLTI  : instr_type = INSTR_SLTI;
                     FUNCT3_SLTIU : instr_type = INSTR_SLTIU;
                     FUNCT3_XORI  : instr_type = INSTR_XORI;

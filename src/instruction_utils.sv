@@ -5,7 +5,7 @@ package instruction_utils;
     typedef enum logic [5:0]{
         // --- Instruction Types ---
         INSTR_ILLEGAL,
-        // INSTR_NOP,
+        INSTR_NOP, // addi x0, x0, 0
 
         // U-Type
         INSTR_LUI,
@@ -151,7 +151,13 @@ package instruction_utils;
             // I-type
             OPCODE_OP_IMM: begin
                 case (funct3)
-                    FUNCT3_ADDI  : result_str = $sformatf("addi x%0d, x%0d, %0d", rd, rs1, $signed(imm_i));
+                    FUNCT3_ADDI  : begin
+                        if (rs1 == 0 && rd == 0 && imm_i == 0) begin
+                            result_str = "nop";
+                        end else begin
+                            result_str = $sformatf("addi x%0d, x%0d, %0d", rd, rs1, $signed(imm_i));
+                        end
+                    end
                     FUNCT3_SLTI  : result_str = $sformatf("slti x%0d, x%0d, %0d", rd, rs1, $signed(imm_i));
                     FUNCT3_SLTIU : result_str = $sformatf("sltiu x%0d, x%0d, %0d", rd, rs1, $signed(imm_i));
                     FUNCT3_XORI  : result_str = $sformatf("xori x%0d, x%0d, %0d", rd, rs1, $signed(imm_i));
