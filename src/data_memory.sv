@@ -6,38 +6,42 @@ module data_memory
    (input clk,
     input reset,
     input write_en,
+    input read_en,
     input [31:0] addr,
     input [ 1:0] store_size, // 00 = byte, 01 = half, 10 = word
-    input [31:0] store_data,
+    input [31:0] write_data,
 
-    output [31:0] load_data
+    output logic [31:0] read_data
 );
 
     // Memory
-    reg [8:0] mem [0:MEM_SIZE];
+    logic [7:0] mem [0:MEM_SIZE-1];
 
-    // Async Read
-    assign load_data = reset ? 32'b0 : {mem[addr+3], mem[addr+2], mem[addr+1], mem[addr]};
+    // Async Read, sign extention and byte selection is performed by the lsu
+    assign read_data = (reset || !read_en) ? 32'b0 : {mem[addr+3], mem[addr+2], mem[addr+1], mem[addr]};
+
 
     // Synchronous Write
     always_ff @(posedge clk) begin
         if (reset) begin
-            for (int i = 0; i < MEM_SIZE+1; i = i + 1) begin
+            for (int i = 0; i < MEM_SIZE; i = i + 1) begin
                 mem[i] = 32'b0;
             end
         end else if (write_en) begin
-            if (store_size == 2'b00) begin // byte
-                mem[addr] = store_data;
-            end else if (store_size == 2'b01) begin // half word
-                mem[addr] = store_data[7:0];
-                mem[addr+1] = store_data[15:8];
-            end else if (store_size == 2'b10) begin // word
-                mem[addr] = store_data[7:0];
-                mem[addr+1] = store_data[15:8];
-                mem[addr+2] = store_data[23:16];
-                mem[addr+3] = store_data[31:24];
-            end
-
+            case (store_size)
+                2'b00 : begin // byte
+                    mem[addr] = write_data[7:0];
+                end
+                2'b01 : begin // half word
+                    {mem[addr+1], mem[addr]} = write_data[15:0];
+                end
+                2'b10 : begin // word
+                    {mem[addr+3], mem[addr+2], mem[addr+1], mem[addr]} = write_data;
+                end
+                default : begin // default to byte write
+                    mem[addr] = write_data[7:0];
+                end
+            endcase
         end
     end
 endmodule

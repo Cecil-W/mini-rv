@@ -63,9 +63,7 @@ module tb_core;
             // Wait for completion
             #800;
             for (int i = 5; i < 30; i = i + 1) begin
-                if(dut.reg_file.registers[i] != 1) begin
-                    $display("Register x%0d failed!", i);
-                end
+                assert(dut.reg_file.registers[i] == 1) else $error("Instruction for register x%0d failed!", i);
             end
             $display("TEST DONE");
         end

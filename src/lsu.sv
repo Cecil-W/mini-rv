@@ -13,6 +13,7 @@ module lsu(
     output logic mem_wb_en, // setting the register file target to store mem output instead of alu result
     output logic [31:0] mem_wb, 
     output logic write_en, // write enable for store instructions
+    output logic read_en,
     output logic [ 1:0] store_size, // 00 = byte, 01 = half, 10 = word
     output logic [31:0] store_data
 );
@@ -33,28 +34,34 @@ module lsu(
         mem_wb_en = 0;
         mem_wb = 32'b0;
         write_en = 0;
+        read_en = 0;
         store_size = 2'b00;
         store_data = 32'b0;
         case (instr)
             // I-Type (Load)
             INSTR_LB : begin
                 mem_wb_en = 1;
+                read_en = 1;
                 mem_wb = {{24{load_data_b_msb}}, load_data_b};
             end
             INSTR_LH : begin
                 mem_wb_en = 1;
+                read_en = 1;
                 mem_wb = {{16{load_data_h_msb}}, load_data_h};
             end
             INSTR_LW : begin
                 mem_wb_en = 1;
+                read_en = 1;
                 mem_wb = load_data;
             end
             INSTR_LBU :begin
                 mem_wb_en = 1;
+                read_en = 1;
                 mem_wb = {{24{1'b0}}, load_data_b};
             end
             INSTR_LHU : begin
                 mem_wb_en = 1;
+                read_en = 1;
                 mem_wb = {{16{1'b0}}, load_data_h};
             end
             
@@ -77,7 +84,8 @@ module lsu(
             default : begin
                 mem_wb_en = 0;
                 mem_wb = 32'b0;
-                write_en   = 0;
+                write_en = 0;
+                read_en = 0;
                 store_size = 2'b10;
                 store_data = 32'b0;
             end

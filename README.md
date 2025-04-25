@@ -1,6 +1,6 @@
-# mini-rv
+# mini-rv32
 
-A WIP simple RV32I core, that is currently not pipelined and as a start only supports add(i) and some branch instructions to test early
+A simple single-cycle RV32I core, that is currently not pipelined or synthesizable
 
 ## Compilation & Simulation
 

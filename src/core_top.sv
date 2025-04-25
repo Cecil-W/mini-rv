@@ -87,6 +87,7 @@ module core_top(
     // from lsu to mem
     wire [31:0] mem_address;
     wire write_en;
+    wire read_en;
     wire [1:0] store_size;
     wire [31:0] store_data;
 
@@ -100,6 +101,7 @@ module core_top(
         .mem_wb_en(mem_wb_en),
         .mem_wb(mem_wb),
         .write_en(write_en),
+        .read_en(read_en),
         .store_size(store_size),
         .store_data(store_data)
     );
@@ -110,9 +112,10 @@ module core_top(
         .clk(clk),
         .reset(reset),
         .write_en(write_en),
+        .read_en(read_en),
         .addr(mem_address),
         .store_size(store_size),
-        .store_data(store_data),
-        .load_data(load_data)
+        .write_data(store_data),
+        .read_data(load_data)
     );
 endmodule
