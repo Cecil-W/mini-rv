@@ -5,3 +5,5 @@
 .settings/
 .project
 .library_mapping.xml
+*.drawio.bkp
+*.gtkw
