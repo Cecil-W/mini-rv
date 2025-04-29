@@ -14,6 +14,7 @@ module decode(
     );
     
     wire is_r_type = instr[6:2] == 5'b01011 || instr[6:2] ==? 5'b011?0 || instr[6:2] == 5'b10100;
+    // TODO there is a bug when i load an illigal instruction eg. opcode 000_0000 it still matches 'is_i_type'
     wire is_i_type = (instr[6:5] == 2'b00 && (instr[4:2] ==? 3'b00? || instr[4:2] ==? 3'b1?0 )) || instr[6:2] == 5'b11001;
     wire is_s_type = instr[6:2] ==? 5'b0100?;
     wire is_b_type = instr[6:2] == 5'b11000;
