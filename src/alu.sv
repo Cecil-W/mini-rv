@@ -1,5 +1,3 @@
-`timescale 1ns / 1ps
-
 import instruction_utils::*;
 
 module alu(
@@ -51,12 +49,20 @@ module alu(
             INSTR_BLTU : take_branch = rs1 < rs2;
             INSTR_BGEU : take_branch = rs1 >= rs2;
             // I-Type (ALU Immediate)
-            INSTR_ADDI  : result = rs1 + imm;
+            INSTR_LHU,
+            INSTR_LB,
+            INSTR_LH,
+            INSTR_LW,
+            INSTR_LBU,
+            INSTR_SB,
+            INSTR_SH,
+            INSTR_SW,
+            INSTR_ADDI  : result = rs1 + imm; // reuse addi for load/store address computation
             INSTR_XORI  : result = rs1 ^ imm;
             INSTR_ORI   : result = rs1 | imm;
             INSTR_ANDI  : result = rs1 & imm;
-            INSTR_SLTI  : result = ((rs1 < imm) ^ (rs1_msb != imm_msb)) ? 32'b1 : 32'b0;
-            INSTR_SLTIU : result = rs1 < imm ? 32'b1 : 32'b0; // TODO simplify this to {31'b0, rs1 < imm}, only works on unsigned
+            INSTR_SLTI  : result = {31'b0, ((rs1 < imm) ^ (rs1_msb != imm_msb))};
+            INSTR_SLTIU : result = {31'b0, rs1 < imm};
             INSTR_SLLI  : result = rs1 << shift_imm;
             INSTR_SRLI  : result = rs1 >> shift_imm;
             INSTR_SRAI  : result = sext_rs1_64 >> shift_imm; // can't use >>> as the inputs are not signed
@@ -70,8 +76,8 @@ module alu(
             INSTR_SLL  : result = rs1 <<  shift_rs2;
             INSTR_SRL  : result = rs1 >>  shift_rs2;
             INSTR_SRA  : result = sext_rs1_64 >> shift_rs2;
-            INSTR_SLT  : result = ((rs1 < imm) ^ (rs1_msb != imm_msb)) ? 32'b1 : 32'b0;
-            INSTR_SLTU : result = rs1 < rs2 ? 32'b1 : 32'b0;
+            INSTR_SLT  : result = {31'b0, ((rs1 < rs2) ^ (rs1_msb != imm_msb))};
+            INSTR_SLTU : result = {31'b0, rs1 < rs2};
             default    : result = 32'b0;
         endcase
     end

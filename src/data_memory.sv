@@ -1,5 +1,3 @@
-`timescale 1ns / 1ps
-
 // little-endian data memory
 module data_memory
   #(parameter MEM_SIZE = 512) // memory size in bytes
@@ -17,15 +15,20 @@ module data_memory
     // Memory
     logic [7:0] mem [0:MEM_SIZE-1];
 
-    // Async Read, sign extention and byte selection is performed by the lsu
-    assign read_data = (reset || !read_en) ? 32'b0 : {mem[addr+3], mem[addr+2], mem[addr+1], mem[addr]};
-
+    // Synchronous Read, sign extention and byte selection is performed by the lsu
+    always_ff @(posedge clk) begin
+        if (reset) begin
+            read_data <= 32'b0;
+        end else if (read_en) begin
+            read_data <= {mem[addr+3], mem[addr+2], mem[addr+1], mem[addr]};
+        end
+    end
 
     // Synchronous Write
     always_ff @(posedge clk) begin
         if (reset) begin
             for (int i = 0; i < MEM_SIZE; i = i + 1) begin
-                mem[i] = 32'b0;
+                mem[i] = 8'b0;
             end
         end else if (write_en) begin
             case (store_size)
