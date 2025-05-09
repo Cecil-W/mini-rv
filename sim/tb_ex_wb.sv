@@ -10,7 +10,9 @@ module tb_ex_wb;
     logic rst;
     logic stall;
     rv32i_instr_e id_ex_instr_type;
+    logic [ 4:0] id_ex_rs1_addr;
     logic [31:0] id_ex_rs1;
+    logic [ 4:0] id_ex_rs2_addr;
     logic [31:0] id_ex_rs2;
     logic [31:0] id_ex_imm;
     logic [31:0] id_ex_pc;
@@ -30,12 +32,16 @@ module tb_ex_wb;
         .rst(rst),
         .stall(stall),
         .id_ex_instr_type(id_ex_instr_type),
+        .id_ex_rs1_addr(id_ex_rs1_addr),
         .id_ex_rs1_data(id_ex_rs1),
+        .id_ex_rs2_addr(id_ex_rs2_addr),
         .id_ex_rs2_data(id_ex_rs2),
         .id_ex_imm(id_ex_imm),
         .id_ex_pc(id_ex_pc),
         .id_ex_rd_addr(id_ex_rd_addr),
         .id_ex_write_en(id_ex_write_en),
+        .wb_ex_rd_addr(0), // TODO add a testcase for forwarding
+        .wb_ex_rd_data(0),
 
         .ex_if_take_branch(ex_if_take_branch),
         .ex_if_branch_target(ex_if_branch_target),

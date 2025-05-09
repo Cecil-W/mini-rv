@@ -15,6 +15,8 @@ module tb_id;
     logic [31:0] wb_id_rd_data;
 
     rv32i_instr_e instr_type;
+    logic [ 4:0] rs1_addr;
+    logic [ 4:0] rs2_addr;
     logic [31:0] rs1;
     logic [31:0] rs2;
     logic [31:0] imm;
@@ -39,6 +41,8 @@ module tb_id;
         .wb_id_rd_data(wb_id_rd_data),
 
         .id_ex_instr_type(instr_type),
+        .id_ex_rs1_addr(rs1_addr),
+        .id_ex_rs2_addr(rs2_addr),
         .id_ex_rs1_data(rs1),
         .id_ex_rs2_data(rs2),
         .id_ex_imm(imm),
@@ -62,7 +66,7 @@ module tb_id;
         $readmemh("./sim/instr_test.hex", instructions);
         @(negedge clk); // waiting for the reset to end
         for (int i = 1; i<32; i = i + 1) begin
-            dut.register_file_instance.registers[i] = i;
+            dut.reg_file.registers[i] = i;
         end
     end
 

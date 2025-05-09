@@ -30,7 +30,7 @@ module fetch_stage(
     );
 
 
-    instruction_memory #(.MEM_SIZE(64)) i_memory_instance(
+    instruction_memory #(.MEM_SIZE(64)) i_mem(
         .clk(clk),
         .reset(rst),
         .addr(pc),

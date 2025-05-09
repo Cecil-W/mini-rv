@@ -29,9 +29,9 @@ module lsu(
     rv32i_instr_e wb_instr_type;
     always_ff @(posedge clk) begin
         if (rst) begin
-            wb_instr_type = INSTR_NOP;
+            wb_instr_type <= INSTR_NOP;
         end else if (!stall) begin
-            wb_instr_type = id_ex_instr_type;
+            wb_instr_type <= id_ex_instr_type;
         end
     end
 

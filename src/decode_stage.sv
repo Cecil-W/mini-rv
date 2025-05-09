@@ -11,6 +11,8 @@ module decode_stage(
     input wire logic [31:0] wb_id_rd_data, // write from the wb stage
 
     output rv32i_instr_e id_ex_instr_type,
+    output logic [ 4:0] id_ex_rs1_addr,
+    output logic [ 4:0] id_ex_rs2_addr,
     output logic [31:0] id_ex_rs1_data,
     output logic [31:0] id_ex_rs2_data,
     output logic [31:0] id_ex_imm,
@@ -37,7 +39,7 @@ module decode_stage(
         .instr_type(id_opcode)
     );
 
-    register_file register_file_instance (
+    register_file reg_file (
         .clk(clk),
         .reset(rst),
         .stall(stall),
@@ -58,12 +60,16 @@ module decode_stage(
             id_ex_rd_addr <= 0;
             id_ex_write_en <= 0;
             id_ex_pc <= 0;
+            id_ex_rs1_addr <= 0;
+            id_ex_rs2_addr <= 0;
         end else if (!stall) begin
             id_ex_imm <= id_imm;
             id_ex_instr_type <= id_opcode;
             id_ex_rd_addr <= id_rd_addr;
             id_ex_write_en <= id_write_en;
             id_ex_pc <= if_id_pc;
+            id_ex_rs1_addr <= rs1_addr;
+            id_ex_rs2_addr <= rs2_addr;
         end
     end
 endmodule

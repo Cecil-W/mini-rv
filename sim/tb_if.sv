@@ -38,7 +38,7 @@ module tb_if;
         rst <= 1'b0;
         $display("[%0t] De-asserting Reset", $time);
         // loading instructions into I memory just as a test case
-        $readmemh("./sim/instr_test.hex", dut.i_memory_instance.mem, 0);
+        $readmemh("./sim/instr_test.hex", dut.i_mem.mem, 0);
         @(posedge clk);
         $display("[%0t] Normal operation starts", $time);
         repeat (5) @(posedge clk); // Run for 5 cycles

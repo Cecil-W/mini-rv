@@ -13,7 +13,7 @@ module core_top(
     wire [31:0] if_id_instr_data;
     wire [31:0] if_id_pc;
 
-    fetch_stage fetch_stage_instance (
+    fetch_stage if_stage (
         .clk(clk),
         .rst(rst),
         .stall(if_stall),
@@ -32,14 +32,16 @@ module core_top(
     wire [31:0] wb_id_rd_data;
 
     wire rv32i_instr_e id_ex_instr_type;
+    wire [ 4:0] id_ex_rs1_addr;
     wire [31:0] id_ex_rs1_data;
+    wire [ 4:0] id_ex_rs2_addr;
     wire [31:0] id_ex_rs2_data;
     wire [31:0] id_ex_imm;
     wire [31:0] id_ex_pc;
     wire [ 4:0] id_ex_rd_addr;
     wire id_ex_write_en;
 
-    decode_stage decode_stage_instance (
+    decode_stage id_stage (
         .clk(clk),
         .rst(rst),
         .stall(id_stall),
@@ -50,7 +52,9 @@ module core_top(
         .wb_id_rd_data(wb_id_rd_data),
 
         .id_ex_instr_type(id_ex_instr_type),
+        .id_ex_rs1_addr(id_ex_rs1_addr),
         .id_ex_rs1_data(id_ex_rs1_data),
+        .id_ex_rs2_addr(id_ex_rs2_addr),
         .id_ex_rs2_data(id_ex_rs2_data),
         .id_ex_imm(id_ex_imm),
         .id_ex_pc(id_ex_pc),
@@ -65,8 +69,10 @@ module core_top(
     wire ex_stall;
     wire [31:0] ex_wb_result;
     wire ex_wb_write_en;
-    wire [4:0] ex_wb_rd_addr;
+    wire [ 4:0] ex_wb_rd_addr;
     wire [31:0] mem_addr;
+    wire [ 4:0] wb_ex_rd_addr;
+    wire [31:0] wb_ex_rd_data;
     // LSU wires
     wire [31:0] mem_wb_load_data;
     wire wb_lsu_write_sel;
@@ -76,21 +82,30 @@ module core_top(
     wire [ 1:0] store_size;
     wire [31:0] store_data;
 
+    // write back to register file
     assign wb_id_wr_en = ex_wb_write_en;
     assign wb_id_rd_addr = ex_wb_rd_addr;
     assign wb_id_rd_data = wb_lsu_write_sel ? wb_load_result : ex_wb_result;
 
-    execute_stage execute_stage_instance (
+    // forwarding wb result to execute stage
+    assign wb_ex_rd_addr = wb_id_rd_addr;
+    assign wb_ex_rd_data = wb_id_rd_data;
+
+    execute_stage ex_stage (
         .clk(clk),
         .rst(rst),
         .stall(ex_stall),
         .id_ex_instr_type(id_ex_instr_type),
+        .id_ex_rs1_addr(id_ex_rs1_addr),
         .id_ex_rs1_data(id_ex_rs1_data),
+        .id_ex_rs2_addr(id_ex_rs2_addr), // TODO add ports to id stage
         .id_ex_rs2_data(id_ex_rs2_data),
         .id_ex_imm(id_ex_imm),
         .id_ex_pc(id_ex_pc),
         .id_ex_rd_addr(id_ex_rd_addr),
         .id_ex_write_en(id_ex_write_en),
+        .wb_ex_rd_addr(wb_ex_rd_addr),
+        .wb_ex_rd_data(wb_ex_rd_data),
 
         .ex_if_take_branch(ex_if_take_branch),
         .ex_if_branch_target(ex_if_branch_target),
@@ -100,7 +115,7 @@ module core_top(
         .mem_addr(mem_addr)
     );
     
-    lsu lsu_instance (
+    lsu lsu (
         .clk(clk),
         .rst(rst),
         .stall(ex_stall),
@@ -118,7 +133,7 @@ module core_top(
     
     data_memory #(
         .MEM_SIZE(64)
-    ) data_memory_instance (
+    ) d_mem (
         .clk(clk),
         .rst(rst),
         .write_en(mem_write_en),
