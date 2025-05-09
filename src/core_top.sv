@@ -1,121 +1,131 @@
-`timescale 1ns / 1ps
-
 import instruction_utils::*;
 
 module core_top(
     input wire clk,
-    input wire reset
+    input wire rst
 );
 
-    wire [31:0] pc;
-    wire [31:0] branch_target;
+    // Instruction Fetch Stage
 
-    wire take_branch;
-    wire stall = 0;
+    wire if_stall; // TODO determine when to stall
+    wire ex_if_take_branch;
+    wire [31:0] ex_if_branch_target;
+    wire [31:0] if_id_instr_data;
+    wire [31:0] if_id_pc;
 
-    program_counter program_counter_instance (
+    fetch_stage fetch_stage_instance (
         .clk(clk),
-        .reset(reset),
-        .stall(stall),
-        .branch_target(branch_target),
-        .branch_taken(take_branch),
-        .pc(pc)
+        .rst(rst),
+        .stall(if_stall),
+        .ex_if_take_branch(ex_if_take_branch),
+        .ex_if_branch_target(ex_if_branch_target),
+
+        .if_id_instr_data(if_id_instr_data),
+        .if_id_pc(if_id_pc)
     );
 
-    wire [31:0] instr;
+    // Instruction Decode Stage
 
-    instruction_memory i_mem (
-        .reset(reset),
-        .addr(pc),
-        .data(instr)
-    );
+    wire id_stall; // TODO determine when to stall
+    wire wb_id_wr_en;
+    wire [ 4:0] wb_id_rd_addr;
+    wire [31:0] wb_id_rd_data;
 
-    wire [4:0] rs1;
-    wire [4:0] rs2;
-    wire [4:0] rd;
-    wire [31:0] imm;
+    wire rv32i_instr_e id_ex_instr_type;
+    wire [31:0] id_ex_rs1_data;
+    wire [31:0] id_ex_rs2_data;
+    wire [31:0] id_ex_imm;
+    wire [31:0] id_ex_pc;
+    wire [ 4:0] id_ex_rd_addr;
+    wire id_ex_write_en;
 
-    wire rd_write_en;
-
-    rv32i_instr_e decoded_instr;
-
-    decode decoder (
-        .instr(instr),
-        .rs1(rs1),
-        .rs2(rs2),
-        .rd(rd),
-        .imm(imm),
-        .rd_write_en(rd_write_en),
-        .instr_type(decoded_instr)
-    );
-
-
-    wire [31:0] rs1_data;
-    wire [31:0] rs2_data;
-    wire [31:0] alu_result;
-    wire mem_wb_en;
-    wire [31:0] rd_data;
-    wire [31:0] mem_wb;
-
-    assign rd_data = mem_wb_en ? mem_wb : alu_result;
-
-    register_file reg_file (
+    decode_stage decode_stage_instance (
         .clk(clk),
-        .reset(reset),
-        .write_en(rd_write_en),
-        .rs1_addr(rs1),
-        .rs2_addr(rs2),
-        .rd_addr(rd),
-        .rd_data(rd_data),
-        .rs1_data(rs1_data),
-        .rs2_data(rs2_data)
+        .rst(rst),
+        .stall(id_stall),
+        .if_id_instr_data(if_id_instr_data),
+        .if_id_pc(if_id_pc),
+        .wb_id_wr_en(wb_id_wr_en),
+        .wb_id_rd_addr(wb_id_rd_addr),
+        .wb_id_rd_data(wb_id_rd_data),
+
+        .id_ex_instr_type(id_ex_instr_type),
+        .id_ex_rs1_data(id_ex_rs1_data),
+        .id_ex_rs2_data(id_ex_rs2_data),
+        .id_ex_imm(id_ex_imm),
+        .id_ex_pc(id_ex_pc),
+        .id_ex_rd_addr(id_ex_rd_addr),
+        .id_ex_write_en(id_ex_write_en)
     );
 
-    alu alu_instance (
-        .rs1(rs1_data),
-        .rs2(rs2_data),
-        .imm(imm),
-        .pc(pc),
-        .instr(decoded_instr),
-        .take_branch(take_branch),
-        .branch_target(branch_target),
-        .result(alu_result)
-    );
+    // Execute & Write Back Stage
+    // as the LSU goes across these two stages and the WB stage is trivial, they are combined here
 
-    // from d mem to lsu
-    wire [31:0] load_data;
-    // from lsu to mem
-    wire [31:0] mem_address;
-    wire write_en;
-    wire read_en;
-    wire [1:0] store_size;
+    // Execute/alu wires
+    wire ex_stall;
+    wire [31:0] ex_wb_result;
+    wire ex_wb_write_en;
+    wire [4:0] ex_wb_rd_addr;
+    wire [31:0] mem_addr;
+    // LSU wires
+    wire [31:0] mem_wb_load_data;
+    wire wb_lsu_write_sel;
+    wire [31:0] wb_load_result;
+    wire mem_read_en;
+    wire mem_write_en;
+    wire [ 1:0] store_size;
     wire [31:0] store_data;
 
+    assign wb_id_wr_en = ex_wb_write_en;
+    assign wb_id_rd_addr = ex_wb_rd_addr;
+    assign wb_id_rd_data = wb_lsu_write_sel ? wb_load_result : ex_wb_result;
+
+    execute_stage execute_stage_instance (
+        .clk(clk),
+        .rst(rst),
+        .stall(ex_stall),
+        .id_ex_instr_type(id_ex_instr_type),
+        .id_ex_rs1_data(id_ex_rs1_data),
+        .id_ex_rs2_data(id_ex_rs2_data),
+        .id_ex_imm(id_ex_imm),
+        .id_ex_pc(id_ex_pc),
+        .id_ex_rd_addr(id_ex_rd_addr),
+        .id_ex_write_en(id_ex_write_en),
+
+        .ex_if_take_branch(ex_if_take_branch),
+        .ex_if_branch_target(ex_if_branch_target),
+        .ex_wb_result(ex_wb_result),
+        .ex_wb_write_en(ex_wb_write_en),
+        .ex_wb_rd_addr(ex_wb_rd_addr),
+        .mem_addr(mem_addr)
+    );
+    
     lsu lsu_instance (
-        .rs1(rs1_data),
-        .rs2(rs2_data),
-        .imm(imm),
-        .instr(decoded_instr),
-        .load_data(load_data),
-        .address(mem_address),
-        .mem_wb_en(mem_wb_en),
-        .mem_wb(mem_wb),
-        .write_en(write_en),
-        .read_en(read_en),
+        .clk(clk),
+        .rst(rst),
+        .stall(ex_stall),
+        .id_ex_rs2_data(id_ex_rs2_data),
+        .id_ex_instr_type(id_ex_instr_type),
+        .mem_wb_load_data(mem_wb_load_data),
+
+        .wb_lsu_write_sel(wb_lsu_write_sel),
+        .wb_load_result(wb_load_result),
+        .mem_read_en(mem_read_en),
+        .mem_write_en(mem_write_en),
         .store_size(store_size),
         .store_data(store_data)
     );
-
+    
     data_memory #(
         .MEM_SIZE(64)
     ) data_memory_instance (
         .clk(clk),
-        .reset(reset),
-        .write_en(write_en),
-        .read_en(read_en),
-        .addr(mem_address),
+        .rst(rst),
+        .write_en(mem_write_en),
+        .read_en(mem_read_en),
+        .addr(mem_addr),
         .store_size(store_size),
         .write_data(store_data),
-        .read_data(load_data)
+        .read_data(mem_wb_load_data)
     );
 endmodule

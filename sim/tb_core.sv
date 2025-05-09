@@ -5,70 +5,104 @@ import instruction_utils::*;
 module tb_core;
 
     // Clock and reset signals
+    localparam CLK_PERIOD = 10;    
     logic clk = 0;
-    logic reset;
+    logic reset = 1;
 
     // Instantiate the DUT
     core_top dut (
         .clk(clk),
-        .reset(reset)
+        .rst(reset)
     );
 
     // Clock generation
-    always #5 clk = ~clk;
+    always #(CLK_PERIOD/2) clk = ~clk;
+
+    assign dut.if_stall = 0;
+    assign dut.id_stall = 0;
+    assign dut.ex_stall = 0;
+
+    // reset
+    initial begin
+        reset = 1;
+        #CLK_PERIOD;
+        reset = 0;
+    end
+    
 
     // Test sequence
     initial begin
-        // Reset the core
-        reset = 1;
-        #7 reset = 0;
-
+        wait (reset == 0);
+        @(posedge clk);
+        
+        $display("[%0t] Reset done.", $time);
         $display("Starting test sequence...");
-
-        // Monitor execution
-        if ($test$plusargs("debug")) begin
-            forever @(posedge clk) begin
-                if (!reset) begin
-                    $display("PC: 0x%08h | Instr: 0x%08h | %s \t| rs1=%0d | rs2=%0d",
-                        dut.pc, dut.instr, instruction_utils::disassemble(dut.instr), dut.rs1_data, dut.rs2_data);
-                    if (dut.reg_file.write_en && dut.rd != 0) begin
-                        $display("    Register Write: x%0d = %0d", dut.rd, dut.alu_result);
-                    end
-                end
-            end
-        end else $display("set +debug to print debug information");
-    end
-
-    // Test program
-    initial begin
         if ($test$plusargs("sum_test")) begin
             // Initialize instruction memory with test program
             // Program calculates sum of numbers from 5 down to 1 (5+4+3+2+1 = 15)
-            $readmemh("./sim/sum_test.hex", dut.i_mem.mem, 0);
+            $readmemh("./sim/sum_test.hex", dut.fetch_stage_instance.i_memory_instance.mem, 0);
 
             // Wait for completion
             #500;
 
             // Check final register values
-            if(dut.reg_file.registers[1] == 0 && dut.reg_file.registers[2] == 15) begin
+            if(dut.decode_stage_instance.register_file_instance.registers[1] == 0 && dut.decode_stage_instance.register_file_instance.registers[2] == 15) begin
                 $display("TEST PASSED: x1 = 0, x2 = 15 as expected");
             end else begin
-                $display("TEST FAILED: x1 = %0d (expected 0), x2 = %0d (expected 15)", dut.reg_file.registers[1], dut.reg_file.registers[2]);
+                $display("TEST FAILED: x1 = %0d (expected 0), x2 = %0d (expected 15)",
+                dut.decode_stage_instance.register_file_instance.registers[1], dut.decode_stage_instance.register_file_instance.registers[2]);
             end
-        end
-        if ($test$plusargs("instr_test")) begin
+        end else if ($test$plusargs("instr_test")) begin
             // this program tests every instruction (except for b and h load/store instructions)
             // each innstruction test should result in a 1 in the respective register (x5-x29)
-            $readmemh("./sim/instr_test.hex", dut.i_mem.mem, 0);
+            $readmemh("./sim/instr_test.hex", dut.fetch_stage_instance.i_memory_instance.mem, 0);
             // Wait for completion
             #800;
             for (int i = 5; i < 30; i = i + 1) begin
-                assert(dut.reg_file.registers[i] == 1) else $error("Instruction for register x%0d failed!", i);
+                assert(dut.decode_stage_instance.register_file_instance.registers[i] == 1) else $error("Instruction for register x%0d failed!", i);
             end
             $display("TEST DONE");
+        end else begin
+            $warning("No Program selected! Set either +sum_test or +instr_test");
         end
 
         $finish;
+    end
+
+    // Monitor execution
+    initial begin        
+        if ($test$plusargs("debug")) begin
+            forever @(posedge clk) begin
+                if (!reset) begin
+                    $display("-----------------------------------------------------------------------------");
+                    if (!dut.if_stall) begin
+                        $display("  IF : PC=0x%8h", dut.fetch_stage_instance.pc);
+                    end else if (dut.ex_if_take_branch) begin
+                        $display("  IF : Branch to PC=0x%8h", dut.fetch_stage_instance.ex_if_branch_target);
+                    end else begin
+                        $display("  IF : ---- STALLED or EMPTY ----");
+                    end
+
+                    if (!dut.id_stall) begin
+                        $display("  ID : PC=0x%8h, %s, rs1=%d, rs2=%d, imm=%0d, rd=%0d",
+                            dut.if_id_pc, instruction_utils::disassemble(dut.if_id_instr_data), dut.decode_stage_instance.rs1_addr,
+                            dut.decode_stage_instance.rs1_addr, dut.decode_stage_instance.id_imm, dut.decode_stage_instance.id_rd_addr);
+                    end else begin
+                        $display("  ID : ---- STALLED or EMPTY ----");
+                    end
+
+                    if (!dut.ex_stall) begin
+                        $display("  EX : PC=0x%8h, %s, ALU_Out=%0d",
+                        dut.id_ex_pc, dut.id_ex_instr_type.name(), dut.execute_stage_instance.ex_result);
+                    end else begin
+                        $display("  EX : ---- STALLED or EMPTY ----");
+                    end
+
+                    $display("  WB : Instr=%s, rd[%0d]=%0d, RegWrite=%b",
+                        dut.lsu_instance.wb_instr_type.name(), dut.wb_id_rd_addr, dut.wb_id_rd_data, dut.wb_id_wr_en);
+                end
+            end
+        end else $display("set +debug to print debug information");
     end
 
     initial begin

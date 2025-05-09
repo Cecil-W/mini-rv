@@ -21,6 +21,9 @@ module decode(
     wire is_u_type = instr[6:2] ==? 5'b0?101;
     wire is_j_type = instr[6:2] == 5'b11011;
     
+    // TODO these addresses get assigned even if the instruction does not have the respective operand
+    // (eg. rs2 for I instructions), this causes the register file to ouput them, which is not a real problem
+    // but could be fixed by moving this assignment into the always_comb block
     assign rs1 = instr[19:15];
     assign rs2 = instr[24:20];
     assign rd = instr[11:7];

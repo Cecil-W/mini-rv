@@ -2,7 +2,7 @@
 module data_memory
   #(parameter MEM_SIZE = 512) // memory size in bytes
    (input clk,
-    input reset,
+    input rst,
     input write_en,
     input read_en,
     input [31:0] addr,
@@ -17,7 +17,7 @@ module data_memory
 
     // Synchronous Read, sign extention and byte selection is performed by the lsu
     always_ff @(posedge clk) begin
-        if (reset) begin
+        if (rst) begin
             read_data <= 32'b0;
         end else if (read_en) begin
             read_data <= {mem[addr+3], mem[addr+2], mem[addr+1], mem[addr]};
@@ -26,7 +26,7 @@ module data_memory
 
     // Synchronous Write
     always_ff @(posedge clk) begin
-        if (reset) begin
+        if (rst) begin
             for (int i = 0; i < MEM_SIZE; i = i + 1) begin
                 mem[i] = 8'b0;
             end

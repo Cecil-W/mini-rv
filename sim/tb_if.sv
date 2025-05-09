@@ -9,14 +9,16 @@ module tb_if;
     logic take_branch;
     logic [31:0] branch_address;
     logic [31:0] instr;
+    logic [31:0] if_id_pc;
 
     fetch_stage dut (
         .clk(clk),
         .rst(rst),
         .stall(stall),
-        .take_branch(take_branch),
-        .branch_address(branch_address),
-        .instr(instr)
+        .ex_if_take_branch(take_branch),
+        .ex_if_branch_target(branch_address),
+        .if_id_instr_data(instr),
+        .if_id_pc(if_id_pc)
     );
 
     always #(CLK_PERIOD/2) clk <= !clk;
@@ -71,10 +73,9 @@ module tb_if;
         $finish;
     end
 
-    // Optional: Monitor signals for debugging
     initial begin
-        $monitor("stall=%b, take_branch=%b, branch_addr=%h, pc=%08h instr=%08h",
-            stall, take_branch, branch_address, dut.pc, instr);
+        $monitor("stall=%b, take_branch=%b, branch_addr=%h, pc=%08h, pc_out=%08h, instr=%08h",
+            stall, take_branch, branch_address, dut.pc, dut.if_id_pc, instr);
         $dumpfile("sim/tb_if.fst");
         $dumpvars(0,tb_if);
     end

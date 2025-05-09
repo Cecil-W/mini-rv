@@ -6,8 +6,8 @@ module execute_stage(
     input rst,
     input stall,
     input rv32i_instr_e id_ex_instr_type,
-    input logic [31:0] id_ex_rs1,
-    input logic [31:0] id_ex_rs2,
+    input logic [31:0] id_ex_rs1_data,
+    input logic [31:0] id_ex_rs2_data,
     input logic [31:0] id_ex_imm,
     input logic [31:0] id_ex_pc, // TODO add PC to the previous stages
     input logic [4:0] id_ex_rd_addr,
@@ -28,8 +28,8 @@ module execute_stage(
     assign mem_addr = ex_result;
 
     alu alu_instance (
-        .rs1(id_ex_rs1),
-        .rs2(id_ex_rs2),
+        .rs1(id_ex_rs1_data),
+        .rs2(id_ex_rs2_data),
         .imm(id_ex_imm),
         .pc(id_ex_pc),
         .instr(id_ex_instr_type),

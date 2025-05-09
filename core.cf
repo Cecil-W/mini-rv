@@ -1,9 +1,12 @@
 src/instruction_utils.sv
 src/program_counter.sv
 src/instruction_memory.sv
+src/fetch_stage.sv
 src/decode.sv
 src/register_file.sv
+src/decode_stage.sv
 src/alu.sv
+src/execute_stage.sv
 src/lsu.sv
 src/data_memory.sv
 src/core_top.sv

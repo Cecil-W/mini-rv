@@ -4,17 +4,19 @@ module decode_stage(
     input wire logic clk,
     input wire logic rst,
     input wire logic stall,
-    input wire logic [31:0] instr,
-    input wire logic [4:0] wb_id_rd_addr, // write from the wb stage
-    input wire logic wb_id_wr_en, // write from the wb stage
+    input wire logic [31:0] if_id_instr_data,
+    input wire logic [31:0] if_id_pc,
+    input wire logic        wb_id_wr_en, // write from the wb stage
+    input wire logic [ 4:0] wb_id_rd_addr, // write from the wb stage
     input wire logic [31:0] wb_id_rd_data, // write from the wb stage
 
-    output rv32i_instr_e instr_type,
-    output logic [31:0] rs1,
-    output logic [31:0] rs2,
-    output logic [31:0] imm,
-    output logic [4:0] rd_addr,
-    output logic write_en
+    output rv32i_instr_e id_ex_instr_type,
+    output logic [31:0] id_ex_rs1_data,
+    output logic [31:0] id_ex_rs2_data,
+    output logic [31:0] id_ex_imm,
+    output logic [31:0] id_ex_pc,
+    output logic [ 4:0] id_ex_rd_addr,
+    output logic        id_ex_write_en
 );
 
     wire logic [4:0] rs1_addr; // into register file
@@ -25,7 +27,7 @@ module decode_stage(
     rv32i_instr_e id_opcode; // into ff, to exe stage
 
     decode decode_instance (
-        .instr(instr), // from if
+        .instr(if_id_instr_data), // from if
 
         .rs1(rs1_addr), // into register file, to exe stage 
         .rs2(rs2_addr), // into register file, to exe stage 
@@ -39,27 +41,29 @@ module decode_stage(
         .clk(clk),
         .reset(rst),
         .stall(stall),
-        .rs1_addr(rs1_addr), // to exe stage
-        .rs2_addr(rs2_addr), // to exe stage
+        .rs1_addr(rs1_addr),
+        .rs2_addr(rs2_addr),
         .write_en(wb_id_wr_en), // from wb stage
         .rd_addr(wb_id_rd_addr), // from wb stage
         .rd_data(wb_id_rd_data), // from wb stage
 
-        .rs1_data(rs1), // to exe stage
-        .rs2_data(rs2) // to exe stage
+        .rs1_data(id_ex_rs1_data), // to exe stage
+        .rs2_data(id_ex_rs2_data) // to exe stage
     );
 
     always_ff @(posedge clk) begin
         if (rst) begin
-            imm <= 0;
-            instr_type <= INSTR_NOP;
-            rd_addr <= 0;
-            write_en <= 0;
+            id_ex_imm <= 0;
+            id_ex_instr_type <= INSTR_NOP;
+            id_ex_rd_addr <= 0;
+            id_ex_write_en <= 0;
+            id_ex_pc <= 0;
         end else if (!stall) begin
-            imm <= id_imm;
-            instr_type <= id_opcode;
-            rd_addr <= id_rd_addr;
-            write_en <= id_write_en;
+            id_ex_imm <= id_imm;
+            id_ex_instr_type <= id_opcode;
+            id_ex_rd_addr <= id_rd_addr;
+            id_ex_write_en <= id_write_en;
+            id_ex_pc <= if_id_pc;
         end
     end
 endmodule
