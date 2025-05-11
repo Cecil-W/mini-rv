@@ -227,9 +227,4 @@ package instruction_utils;
         endcase
         return result_str;
     endfunction
-
-    // function needed for iverilog to print the enum names for wires of this enum type
-    function automatic string name(input rv32i_instr_e instr);
-        name = instr.name();
-    endfunction
 endpackage : instruction_utils
