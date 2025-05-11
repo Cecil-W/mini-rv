@@ -18,7 +18,6 @@ module tb_core;
     // Clock generation
     always #(CLK_PERIOD/2) clk = ~clk;
 
-    assign dut.if_stall = 0;
     assign dut.id_stall = 0;
     assign dut.ex_stall = 0;
 
@@ -75,7 +74,7 @@ module tb_core;
             forever @(posedge clk) begin
                 if (!reset) begin
                     $display("-----------------------------------------------------------------------------");
-                    if (!dut.if_stall) begin
+                    if (!dut.stall_if) begin
                         $display("  IF : PC=0x%8h", dut.if_stage.pc);
                     end else if (dut.ex_if_take_branch) begin
                         $display("  IF : Branch to PC=0x%8h", dut.if_stage.ex_if_branch_target);

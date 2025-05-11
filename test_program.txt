@@ -57,7 +57,7 @@ JAL x25, 4
 AUIPC x4, 0
 XOR x25, x25, x4
 XORI x25, x25, 1
-JALR x26, x4, 16
+JALR x26, 16(x4)
 SUB x26, x26, x4
 ADDI x26, x26, -15
 SW x1, 1(x2) /* stores 21 at address 8*/

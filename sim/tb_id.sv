@@ -23,6 +23,7 @@ module tb_id;
     logic [31:0] id_ex_pc;
     logic [4:0] rd_addr;
     logic write_en;
+    logic stall_if;
 
     logic [31:0] instructions [0:64];
     integer pc = 0;
@@ -39,7 +40,7 @@ module tb_id;
         .wb_id_rd_addr(wb_id_rd_addr),
         .wb_id_wr_en(wb_id_wr_en),
         .wb_id_rd_data(wb_id_rd_data),
-
+        
         .id_ex_instr_type(instr_type),
         .id_ex_rs1_addr(rs1_addr),
         .id_ex_rs2_addr(rs2_addr),
@@ -48,7 +49,8 @@ module tb_id;
         .id_ex_imm(imm),
         .id_ex_pc(id_ex_pc),
         .id_ex_rd_addr(rd_addr),
-        .id_ex_write_en(write_en)
+        .id_ex_write_en(write_en),
+        .stall_if(stall_if)
     );
 
     always #(CLK_PERIOD/2) clk <= !clk;

@@ -10,6 +10,7 @@ module decode(
     output [4:0] rd,
     output logic [31:0] imm,
     output wire rd_write_en,
+    output logic stall_if,
     output rv32i_instr_e instr_type
     );
     
@@ -46,8 +47,10 @@ module decode(
                  32'b0;
 
     always_comb begin // could move the imm assignment here
+        stall_if = 0;
         case (opcode)
             OPCODE_BRANCH : begin
+                stall_if = 1;
                 case (funct3)
                     FUNCT3_BEQ  : instr_type = INSTR_BEQ;
                     FUNCT3_BNE  : instr_type = INSTR_BNE;
@@ -65,9 +68,11 @@ module decode(
                 instr_type = INSTR_AUIPC;
             end
             OPCODE_JAL : begin
+                stall_if = 1;
                 instr_type = INSTR_JAL;
             end
             OPCODE_JALR : begin
+                stall_if = 1;
                 instr_type = INSTR_JALR;
             end
             OPCODE_LOAD : begin
@@ -128,7 +133,10 @@ module decode(
                     default : instr_type = INSTR_ILLEGAL;
                 endcase
             end
-            default : instr_type = INSTR_ILLEGAL;
+            default : begin
+                stall_if = 0;
+                instr_type = INSTR_ILLEGAL;
+            end
         endcase        
     end
     

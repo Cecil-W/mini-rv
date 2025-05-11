@@ -18,7 +18,8 @@ module decode_stage(
     output logic [31:0] id_ex_imm,
     output logic [31:0] id_ex_pc,
     output logic [ 4:0] id_ex_rd_addr,
-    output logic        id_ex_write_en
+    output logic        id_ex_write_en,
+    output logic        stall_if
 );
 
     wire logic [4:0] rs1_addr; // into register file
@@ -36,6 +37,7 @@ module decode_stage(
         .rd(id_rd_addr), // into ff, to exe stage
         .imm(id_imm), // into ff, to exe stage
         .rd_write_en(id_write_en),
+        .stall_if(stall_if),
         .instr_type(id_opcode)
     );
 

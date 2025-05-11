@@ -25,7 +25,7 @@ module register_file(
         end
     end
 
-    // Synchronous read
+    // Synchronous read with read forwarding
     always_ff @(posedge clk) begin
         if (reset) begin
             rs1_data <= 32'b0;
@@ -33,12 +33,16 @@ module register_file(
         end else if(!stall) begin
             if (rs1_addr == 0) begin
                 rs1_data <= 32'b0;
+            end else if (rd_addr == rs1_addr) begin
+                rs1_data <= rd_data;
             end else begin
                 rs1_data <= registers[rs1_addr];
             end
 
             if (rs2_addr == 0) begin
                 rs2_data <= 32'b0;
+            end else if (rd_addr == rs2_addr) begin
+                rs2_data <= rd_data;
             end else begin
                 rs2_data <= registers[rs2_addr];
             end

@@ -15,7 +15,7 @@ module tb_if;
         .clk(clk),
         .rst(rst),
         .stall(stall),
-        .ex_if_take_branch(take_branch),
+        .ex_if_branch_taken(take_branch),
         .ex_if_branch_target(branch_address),
         .if_id_instr_data(instr),
         .if_id_pc(if_id_pc)

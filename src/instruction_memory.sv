@@ -4,6 +4,7 @@ module instruction_memory
   #(parameter MEM_SIZE = 256)
    (input logic clk,
     input logic reset,
+    input wire logic stall,
     input logic [31:0] addr,
 
     output logic [31:0] data
@@ -23,7 +24,9 @@ module instruction_memory
 
     always_ff @(posedge clk) begin
         if (reset) begin
-            data <= 32'b0;
+            data <= 32'h00000013;
+        end else if (stall) begin
+            data <= 32'h00000013; // NOP
         end else begin
             data <= mem[addr>>2];
         end

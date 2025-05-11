@@ -7,17 +7,17 @@ module core_top(
 
     // Instruction Fetch Stage
 
-    wire if_stall; // TODO determine when to stall
     wire ex_if_take_branch;
     wire [31:0] ex_if_branch_target;
     wire [31:0] if_id_instr_data;
     wire [31:0] if_id_pc;
+    wire stall_if;
 
     fetch_stage if_stage (
         .clk(clk),
         .rst(rst),
-        .stall(if_stall),
-        .ex_if_take_branch(ex_if_take_branch),
+        .stall(stall_if),
+        .ex_if_branch_taken(ex_if_take_branch),
         .ex_if_branch_target(ex_if_branch_target),
 
         .if_id_instr_data(if_id_instr_data),
@@ -26,7 +26,7 @@ module core_top(
 
     // Instruction Decode Stage
 
-    wire id_stall; // TODO determine when to stall
+    wire id_stall;
     wire wb_id_write_en;
     wire [ 4:0] wb_id_rd_addr;
     wire [31:0] wb_id_rd_data;
@@ -59,7 +59,8 @@ module core_top(
         .id_ex_imm(id_ex_imm),
         .id_ex_pc(id_ex_pc),
         .id_ex_rd_addr(id_ex_rd_addr),
-        .id_ex_write_en(id_ex_write_en)
+        .id_ex_write_en(id_ex_write_en),
+        .stall_if(stall_if)
     );
 
     // Execute & Write Back Stage
