@@ -92,14 +92,14 @@ module tb_core;
 
                     if (!dut.ex_stall) begin
                         $display("  EX : PC=0x%8h, %s, rs1=%0d, rs2=%0d, imm=%0d, ALU_Out=%0d",
-                        dut.id_ex_pc, instruction_utils::name(dut.id_ex_instr_type), $signed(dut.ex_stage.rs1_data),
-                        $signed(dut.ex_stage.rs2_data), $signed(dut.ex_stage.id_ex_imm), $signed(dut.ex_stage.ex_result));
+                        dut.id_ex_pc, instruction_utils::name(dut.id_ex_instr_type), $signed(dut.ex_fwd_rs1_data), // TODO try to use dut.id_stage.id_ex_instr_type
+                        $signed(dut.ex_fwd_rs2_data), $signed(dut.ex_stage.id_ex_imm), $signed(dut.ex_stage.ex_result));
                     end else begin
                         $display("  EX : ---- STALLED or EMPTY ----");
                     end
 
                     $display("  WB : Instr=%s, rd[%0d]=%0d, RegWrite=%b",
-                        dut.lsu.wb_instr_type.name(), dut.wb_id_rd_addr, $signed(dut.wb_id_rd_data), dut.wb_id_wr_en);
+                        dut.lsu.wb_instr_type.name(), dut.wb_id_rd_addr, $signed(dut.wb_id_rd_data), dut.wb_id_write_en);
                 end
             end
         end else $display("set +debug to print debug information");
