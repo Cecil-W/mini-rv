@@ -8,7 +8,9 @@ bne x1, x0, -8
 addi x0, x0, 0
 beq x0, x0, -4
 
-/* Program to test every instruction, registers x5-x29 should contain a 1 at the end */
+/* Program to test every instruction, registers x5-x29 should contain a 1 at the end 
+   Initial Source: https://github.com/stevehoover/LF-Building-a-RISC-V-CPU-Core/blob/main/lib/risc-v_shell_lib.tlv
+*/
 ADDI x1, x0, 21
 ADDI x2, x0, 7
 ADDI x3, x0, -4
